@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -52,6 +53,7 @@ fun MainApp(viewModel: MainViewModel) {
     )
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 private fun MainApp(
     isPlaying: Boolean,
@@ -70,12 +72,21 @@ private fun MainApp(
         ) {
             Spacer(modifier = Modifier.weight(1f))
             Row {
+                val numberTransitionSpec: AnimatedContentScope<String>.() -> ContentTransform = {
+                    slideInVertically(initialOffsetY = { it })+ fadeIn() with slideOutVertically(targetOffsetY = { -it }) + fadeOut() using SizeTransform(false)
+                }
                 CompositionLocalProvider(LocalTextStyle provides MaterialTheme.typography.h3) {
-                    Text(text = hours)
+                    AnimatedContent(targetState = hours, transitionSpec = numberTransitionSpec) {
+                        Text(text = it)
+                    }
                     Text(text = ":")
-                    Text(text = minutes)
+                    AnimatedContent(targetState = minutes, transitionSpec = numberTransitionSpec) {
+                        Text(text = it)
+                    }
                     Text(text = ":")
-                    Text(text = seconds)
+                    AnimatedContent(targetState = seconds, transitionSpec = numberTransitionSpec) {
+                        Text(text = it)
+                    }
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
@@ -83,13 +94,15 @@ private fun MainApp(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.background(Color.LightGray, RoundedCornerShape(50))
             ) {
-                if (isPlaying) {
-                    IconButton(onClick = onPause) {
-                        Icon(imageVector = Icons.Filled.Pause, contentDescription = "Pause Icon")
-                    }
-                }else {
-                    IconButton(onClick = onStart) {
-                        Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = "Play Icon")
+                AnimatedContent(targetState = isPlaying) {
+                    if (it) {
+                        IconButton(onClick = onPause) {
+                            Icon(imageVector = Icons.Filled.Pause, contentDescription = "Pause Icon")
+                        }
+                    }else {
+                        IconButton(onClick = onStart) {
+                            Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = "Play Icon")
+                        }
                     }
                 }
                 IconButton(onClick = onStop) {
